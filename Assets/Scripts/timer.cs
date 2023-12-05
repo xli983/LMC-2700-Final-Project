@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class TimerScript : MonoBehaviour
 {
-    public float timeRemaining = 10; // Set the duration of the timer in seconds.
+    public float timeRemaining = 5; // Set the duration of the timer in seconds.
     public bool timerIsRunning = false;
     public Sprite[] clockHandSprites; // Array of sprites for each hand position.
     public Image clockHandImage; // Reference to the Image component.
@@ -14,6 +14,13 @@ public class TimerScript : MonoBehaviour
     private void Start()
     {
         timerIsRunning = true;
+        changeInterval = timeRemaining / clockHandSprites.Length;
+        currentSpriteIndex = 0;
+    }
+    public void SetTime(float newTime)
+    {
+        timeRemaining = newTime;
+        // Recalculate intervals and reset sprite index
         changeInterval = timeRemaining / clockHandSprites.Length;
         currentSpriteIndex = 0;
     }

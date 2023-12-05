@@ -30,6 +30,7 @@ public class PlayerInput : MonoBehaviour
     private GameObject lastActivatedCheckpoint;
     private Vector3 lastCheckpointPosition;
     private bool timerActive = false;
+    public TimerScript timerScript;
 
     //level 2
     public List<GameObject> level2Objects;
@@ -55,6 +56,10 @@ public class PlayerInput : MonoBehaviour
         if (timeLimits.Length > 0)
         {
             timer = timeLimits[0];
+            if (timerScript != null)
+            {
+                timerScript.SetTime(timer);
+            }
         }
         else
         {
@@ -103,6 +108,7 @@ public class PlayerInput : MonoBehaviour
             // Timer logic
             if (timerActive)
             {
+
                 timer -= Time.deltaTime;
                 if (timer <= 0)
                 {
@@ -200,6 +206,10 @@ public class PlayerInput : MonoBehaviour
             transform.position = lastCheckpointPosition; // Fallback if no Rigidbody
         }
         timer = timeLimits[currentLevel - 1];
+        if (timerScript != null)
+        {
+            timerScript.SetTime(timer);
+        }
         ClearCurrentLevelFootprints();
     }
 
@@ -240,11 +250,19 @@ public class PlayerInput : MonoBehaviour
                 if (currentLevel - 1 < timeLimits.Length)
                 {
                     timer = timeLimits[currentLevel - 1];
+                    if (timerScript != null)
+                    {
+                        timerScript.SetTime(timer);
+                    }
                 }
                 else
                 {
                     Debug.LogWarning("Level exceeds the defined time limits. Defaulting to last available time limit.");
                     timer = timeLimits[timeLimits.Length - 1];
+                    if (timerScript != null)
+                    {
+                        timerScript.SetTime(timer);
+                    }
                 }
 
                 if (currentLevel == 2 && level2Objects.Count > 0)
