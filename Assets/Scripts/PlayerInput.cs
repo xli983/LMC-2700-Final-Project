@@ -31,9 +31,22 @@ public class PlayerInput : MonoBehaviour
     private Vector3 lastCheckpointPosition;
     private bool timerActive = false;
 
+    //level 2
+    public List<GameObject> level2Objects;
+    private int currentLevel2ObjectIndex = 0;
+    public GameObject level2Checkpoint;
+
+    //collsion
+    public GameObject object1;
+    public GameObject object2;
+    public GameObject object3;
+    public GameObject object4;
+    private BoxCollider2D playerBoxCollider;
+
     private void Awake()
     {
         animator = GetComponent<Animator>();
+        playerBoxCollider = GetComponent<BoxCollider2D>();
     }
 
     void Start()
@@ -70,10 +83,13 @@ public class PlayerInput : MonoBehaviour
                 {
                     FlipPlayer(moveX);
                 }
-                Vector2 direction = new Vector2(moveX, moveY);
-                Vector3 newPosition = transform.position + new Vector3(moveX, moveY, 0) * moveSpeed * Time.deltaTime;
-                transform.position = newPosition;
+                Vector2 direction = new Vector2(moveX, moveY).normalized;
+                rb.velocity = direction * moveSpeed;
 
+            }
+            else
+            {
+                rb.velocity = Vector2.zero;
             }
 
             //footprint
@@ -92,6 +108,22 @@ public class PlayerInput : MonoBehaviour
                 {
                     ResetToCheckpoint();
                 }
+            }
+            UpdateColliderSize();
+        }
+    }
+
+    private void UpdateColliderSize()
+    {
+        if (playerBoxCollider != null)
+        {
+            if (currentLevel == 1 || currentLevel == 4)
+            {
+                playerBoxCollider.size = new Vector2(3, 3);
+            }
+            else if (currentLevel == 2 || currentLevel == 3)
+            {
+                playerBoxCollider.size = new Vector2(3, 6);
             }
         }
     }
@@ -201,11 +233,32 @@ public class PlayerInput : MonoBehaviour
                     timer = timeLimits[timeLimits.Length - 1];
                 }
 
+                if (currentLevel == 2 && level2Objects.Count > 0)
+                {
+                    level2Objects[0].SetActive(true);
+                }
+
                 timerActive = true;
             }
             else
             {
                 Debug.Log("Same checkpoint reached. No timer reset.");
+            }
+        }
+        if (currentLevel == 2 && other.CompareTag("Level2Object"))
+        {
+            other.gameObject.SetActive(false); // Deactivate the collided object
+
+            currentLevel2ObjectIndex++;
+            if (currentLevel2ObjectIndex < level2Objects.Count)
+            {
+                // Activate the next object
+                level2Objects[currentLevel2ObjectIndex].SetActive(true);
+            }
+            else
+            {
+                // Activate the checkpoint when all objects have been interacted with
+                level2Checkpoint.SetActive(true);
             }
         }
 
@@ -224,6 +277,16 @@ public class PlayerInput : MonoBehaviour
                 spriteRenderer.sortingOrder = 2;
             }
         }
+        if (other.CompareTag("Switch"))
+        {
+            // Deactivate first two objects
+            if (object1 != null) object1.SetActive(false);
+            if (object2 != null) object2.SetActive(false);
+
+            // Activate last two objects
+            if (object3 != null) object3.SetActive(true);
+            if (object4 != null) object4.SetActive(true);
+        }
     }
     private void RevealAllSuccessfulFootprints()
     {
@@ -236,7 +299,7 @@ public class PlayerInput : MonoBehaviour
                     SpriteRenderer spriteRenderer = footprint.GetComponent<SpriteRenderer>();
                     if (spriteRenderer != null)
                     {
-                        spriteRenderer.sortingOrder = 2;
+                        spriteRenderer.sortingOrder = 4;
                     }
                 }
             }
