@@ -1,12 +1,8 @@
-using System;
-using System.Collections;
+
 using System.Collections.Generic;
-using System.Xml.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
-using static UnityEngine.Rendering.VirtualTexturing.Debugging;
-using UnityEngine.Playables;
-using UnityEngine.Rendering.VirtualTexturing;
+using UnityEngine.SceneManagement;
+
 
 public class PlayerInput : MonoBehaviour
 {
@@ -209,6 +205,8 @@ public class PlayerInput : MonoBehaviour
         if (timerScript != null)
         {
             timerScript.SetTime(timer);
+            spriteRenderer.sortingOrder = 3;
+            Debug.Log("reset timer");
         }
         ClearCurrentLevelFootprints();
     }
@@ -319,6 +317,11 @@ public class PlayerInput : MonoBehaviour
             if (object3 != null) object3.SetActive(true);
             if (object4 != null) object4.SetActive(true);
         }
+        if (other.CompareTag("Trans"))
+        {
+            SceneManager.LoadScene("SampleScene");
+        }
+
     }
     private void RevealAllSuccessfulFootprints()
     {
