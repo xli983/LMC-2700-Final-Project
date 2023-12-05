@@ -10,8 +10,8 @@ using UnityEngine.Rendering.VirtualTexturing;
 
 public class PlayerInput : MonoBehaviour
 {
-    public GameObject footstepPrefab; 
-    public float footprintSpacing; 
+    public GameObject footstepPrefab;
+    public float footprintSpacing;
     private Vector3 lastFootprintPosition;
     private Dictionary<int, List<GameObject>> levelFootprints = new Dictionary<int, List<GameObject>>();
 
@@ -70,8 +70,10 @@ public class PlayerInput : MonoBehaviour
                 {
                     FlipPlayer(moveX);
                 }
+                Vector2 direction = new Vector2(moveX, moveY);
                 Vector3 newPosition = transform.position + new Vector3(moveX, moveY, 0) * moveSpeed * Time.deltaTime;
                 transform.position = newPosition;
+
             }
 
             //footprint
@@ -180,7 +182,8 @@ public class PlayerInput : MonoBehaviour
                 ResetPlayerRotation();
                 currentLevel++;
                 animator.SetBool("Top", true);
-                if (currentLevel == 2 || currentLevel == 3){
+                if (currentLevel == 2 || currentLevel == 3)
+                {
                     animator.SetBool("Top", false);
                     Debug.Log(currentLevel);
                 }
@@ -218,7 +221,7 @@ public class PlayerInput : MonoBehaviour
             SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
             if (spriteRenderer != null)
             {
-                spriteRenderer.sortingOrder = 2;  
+                spriteRenderer.sortingOrder = 2;
             }
         }
     }
@@ -241,4 +244,3 @@ public class PlayerInput : MonoBehaviour
     }
 
 }
-   
