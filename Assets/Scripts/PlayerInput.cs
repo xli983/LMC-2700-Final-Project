@@ -13,20 +13,28 @@ public class PlayerInput : MonoBehaviour
     public GameObject footstepPrefab; 
     public float footprintSpacing; 
     private Vector3 lastFootprintPosition;
-    private List<GameObject> footprints = new List<GameObject>();
+    private Dictionary<int, List<GameObject>> levelFootprints = new Dictionary<int, List<GameObject>>();
+
 
     public float moveSpeed;
     private Rigidbody2D rb;
+    private bool isMoving = false;
+    private Animator animator;
 
     private bool hasWon = false;
 
     //timer
     public float[] timeLimits;
     private float timer;
-    private int currentLevel = 1;
+    private int currentLevel = 0;
     private GameObject lastActivatedCheckpoint;
     private Vector3 lastCheckpointPosition;
     private bool timerActive = false;
+
+    private void Awake()
+    {
+        animator = GetComponent<Animator>();
+    }
 
     void Start()
     {
@@ -39,6 +47,8 @@ public class PlayerInput : MonoBehaviour
         {
             Debug.LogError("Time limits not set in the inspector!");
         }
+
+        InitializeLevelFootprints();
     }
 
     void Update()
@@ -47,8 +57,22 @@ public class PlayerInput : MonoBehaviour
         {
             float moveX = Input.GetAxis("Horizontal");
             float moveY = Input.GetAxis("Vertical");
-            Vector3 newPosition = transform.position + new Vector3(moveX, moveY, 0) * moveSpeed * Time.deltaTime;
-            transform.position = newPosition;
+            isMoving = moveX != 0 || moveY != 0;
+            animator.SetBool("isMoving", isMoving);
+
+            if (isMoving)
+            {
+                if (currentLevel == 1 || currentLevel == 4)
+                {
+                    RotatePlayer(moveX, moveY);
+                }
+                else if (currentLevel == 2 || currentLevel == 3)
+                {
+                    FlipPlayer(moveX);
+                }
+                Vector3 newPosition = transform.position + new Vector3(moveX, moveY, 0) * moveSpeed * Time.deltaTime;
+                transform.position = newPosition;
+            }
 
             //footprint
             if (Vector3.Distance(transform.position, lastFootprintPosition) > footprintSpacing)
@@ -57,11 +81,6 @@ public class PlayerInput : MonoBehaviour
                 lastFootprintPosition = transform.position;
             }
 
-            void PlaceFootprint()
-            {
-                GameObject footprint = Instantiate(footstepPrefab, transform.position, Quaternion.identity);
-                footprints.Add(footprint);
-            }
 
             // Timer logic
             if (timerActive)
@@ -73,6 +92,53 @@ public class PlayerInput : MonoBehaviour
                 }
             }
         }
+    }
+
+    void InitializeLevelFootprints()
+    {
+        for (int i = 0; i < timeLimits.Length; i++)
+        {
+            levelFootprints[i] = new List<GameObject>();
+        }
+    }
+
+    void PlaceFootprint()
+    {
+        GameObject footprint = Instantiate(footstepPrefab, transform.position, Quaternion.identity);
+        if (!levelFootprints.ContainsKey(currentLevel))
+        {
+            levelFootprints[currentLevel] = new List<GameObject>();
+        }
+        levelFootprints[currentLevel].Add(footprint);
+    }
+
+    void RotatePlayer(float moveX, float moveY)
+    {
+        // Calculate the angle from the movement direction
+        float angle = Mathf.Atan2(moveY, moveX) * Mathf.Rad2Deg;
+
+        if (moveX != 0 || moveY != 0)
+        {
+            // Apply rotation
+            transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle - 90)); // Subtract 90 degrees to adjust for default downward facing
+        }
+    }
+
+    void FlipPlayer(float moveX)
+    {
+        if (moveX > 0)
+        {
+            transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+        }
+        else if (moveX < 0)
+        {
+            transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+        }
+    }
+
+    private void ResetPlayerRotation()
+    {
+        transform.rotation = Quaternion.Euler(0, 0, 0);
     }
     private void ResetToCheckpoint()
     {
@@ -86,7 +152,22 @@ public class PlayerInput : MonoBehaviour
             transform.position = lastCheckpointPosition; // Fallback if no Rigidbody
         }
         timer = timeLimits[currentLevel - 1];
+        ClearCurrentLevelFootprints();
     }
+
+    private void ClearCurrentLevelFootprints()
+    {
+        if (levelFootprints.ContainsKey(currentLevel))
+        {
+            foreach (var footprint in levelFootprints[currentLevel])
+            {
+                Destroy(footprint);
+            }
+            levelFootprints[currentLevel].Clear();
+        }
+    }
+
+
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -96,7 +177,13 @@ public class PlayerInput : MonoBehaviour
             if (lastActivatedCheckpoint != other.gameObject)
             {
                 Debug.Log("New checkpoint reached. Updating level and resetting timer.");
+                ResetPlayerRotation();
                 currentLevel++;
+                animator.SetBool("Top", true);
+                if (currentLevel == 2 || currentLevel == 3){
+                    animator.SetBool("Top", false);
+                    Debug.Log(currentLevel);
+                }
                 lastCheckpointPosition = other.transform.position;
                 lastActivatedCheckpoint = other.gameObject; // Update the last activated checkpoint
 
@@ -123,14 +210,30 @@ public class PlayerInput : MonoBehaviour
         {
             Debug.Log("Player reached the win point!");
             hasWon = true;
-            foreach (var footprint in footprints)
+            RevealAllSuccessfulFootprints();
+        }
+
+        if (other.CompareTag("Special"))
+        {
+            SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.sortingOrder = 2;  
+            }
+        }
+    }
+    private void RevealAllSuccessfulFootprints()
+    {
+        foreach (var level in levelFootprints)
+        {
+            foreach (var footprint in level.Value)
             {
                 if (footprint != null)
                 {
                     SpriteRenderer spriteRenderer = footprint.GetComponent<SpriteRenderer>();
                     if (spriteRenderer != null)
                     {
-                        spriteRenderer.sortingOrder = 1; 
+                        spriteRenderer.sortingOrder = 2;
                     }
                 }
             }
