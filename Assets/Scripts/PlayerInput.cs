@@ -176,6 +176,20 @@ public class PlayerInput : MonoBehaviour
     }
     private void ResetToCheckpoint()
     {
+        // Deactivate first two objects
+        if (object1 != null) object1.SetActive(true);
+        if (object2 != null) object2.SetActive(true);
+
+        // Activate last two objects
+        if (object3 != null) object3.SetActive(false);
+        if (object4 != null) object4.SetActive(false);
+
+        SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.sortingOrder = 3;
+        }
+
         if (rb != null)
         {
             rb.velocity = Vector2.zero; // Reset any movement velocity
